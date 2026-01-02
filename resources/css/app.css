@@ -1,0 +1,28 @@
+/* Custom application styles for Vue 3 app */
+
+/* You can add your custom CSS here */
+.slide-fade-enter-active {
+    transition: all 0.2s ease-out;
+}
+
+.slide-fade-leave-active {
+    transition: all 0.2s cubic-bezier(1, 0.5, 0.8, 1);
+}
+
+.slide-fade-enter-from {
+    transform: translateX(10px);
+    opacity: 0;
+}
+
+.slide-fade-leave-to {
+    transform: translateX(-10px);
+    opacity: 0;
+}
+
+.btn-width {
+    width: 49% !important;
+}
+
+.user-block {
+    list-style: none !important;
+}

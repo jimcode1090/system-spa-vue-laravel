@@ -1,0 +1,58 @@
+# .claudeignore
+
+# Dependencias
+/vendor/
+/node_modules/
+
+# Storage
+/storage/framework/cache/
+/storage/framework/sessions/
+/storage/framework/views/
+/storage/logs/
+/storage/debugbar/
+
+# Cache
+/bootstrap/cache/*.php
+
+# Compilados
+/public/build/
+/public/hot
+/public/storage
+/public/css/
+/public/js/
+
+# Entorno
+.env
+.env.*
+!.env.example
+
+# Assets
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.svg
+*.webp
+*.woff
+*.woff2
+*.ttf
+*.mp4
+*.mp3
+*.pdf
+
+# IDEs
+.idea/
+.vscode/
+.phpstorm.meta.php
+_ide_helper*.php
+
+# Temporales
+*.log
+*.cache
+*.swp
+.DS_Store
+Thumbs.db
+
+# Testing
+/tests/Browser/screenshots/
+/.phpunit.cache/

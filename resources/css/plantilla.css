@@ -1,0 +1,7 @@
+/* AdminLTE Template CSS Bundle */
+
+/* Import FontAwesome icons */
+@import '@fortawesome/fontawesome-free/css/all.min.css';
+
+/* Import AdminLTE styles (includes Bootstrap CSS) */
+@import '../vendor/css/adminlte.min.css';
