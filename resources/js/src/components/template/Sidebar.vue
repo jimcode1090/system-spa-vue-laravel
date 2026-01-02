@@ -2,6 +2,7 @@
 import { inject } from "vue";
 import { RouterLink } from "vue-router";
 const baseUrl = inject("baseUrl");
+const appName = inject("appName");
 </script>
 <template>
     <aside class="main-sidebar sidebar-dark-primary elevation-4">
@@ -14,7 +15,7 @@ const baseUrl = inject("baseUrl");
                 style="opacity: 0.8"
             />
             <span class="brand-text font-weight-light"
-                >Sistema Laravel y Vue 3</span
+                >{{ appName }}</span
             >
         </a>
 
@@ -42,10 +43,10 @@ const baseUrl = inject("baseUrl");
                     role="menu"
                     data-accordion="false"
                 >
-                    <li class="nav-item has-treeview menu-open">
+                    <li class="nav-item">
                         <RouterLink
                             :to="{ name: 'dashboard' }"
-                            class="nav-link active"
+                            class="nav-link"
                         >
                             <i class="nav-icon fas fa-tachometer-alt"></i>
                             <p>Dashboard</p>

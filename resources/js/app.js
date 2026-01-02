@@ -11,10 +11,12 @@ import App from './src/App.vue';
 // Get the app element and extract props from data attributes
 const appElement = document.getElementById('app');
 const baseUrl = appElement.dataset.baseUrl;
+const appName = appElement.dataset.appName;
 
 // Create Vue app instance with App as root component and pass props
 const app = createApp(App, {
-    baseUrl: baseUrl
+    baseUrl: baseUrl,
+    appName: appName
 });
 
 // Use Pinia for state management

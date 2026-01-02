@@ -3,31 +3,60 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\User\CreateUserRequest;
+use App\Http\Requests\Admin\User\ListUsersRequest;
+use App\Services\UserService;
+use App\Traits\ApiResponser;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
-    public function getListUsers(Request $request)
+    use ApiResponser;
+
+    protected UserService $userService;
+
+    public function __construct(UserService $userService)
     {
-        if (!$request->ajax()) return redirect('/');
-        $name = $request->input('name');
-        $username = $request->input('username');
-        $email = $request->input('email');
-        $state = $request->input('state');
+        $this->userService = $userService;
+    }
 
-        $name = ($name == null) ? ($name = '') : $name;
-        $username = ($username == null) ? ($username = '') : $username;
-        $email = ($email == null) ? ($email = '') : $email;
-        $state = ($state == null) ? ($state = '') : $state;
+    public function getListUsers(ListUsersRequest $request)
+    {
+        try {
+            $filters = $request->validated();
+            $users = $this->userService->getListUsers($filters);
 
-         DB::statement("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
+            return $this->successResponse(
+                $users,
+                'Usuarios obtenidos exitosamente',
+                200
+            );
+        } catch (\Exception $e) {
+            return $this->serverErrorResponse(
+                'Error al obtener la lista de usuarios',
+                $e
+            );
+        }
+    }
 
-        $resp = DB::select('call sp_User_getListUsers (?, ?, ?, ?)', [
-            $name, $username, $email, $state
-        ]);
+    public function createUser(CreateUserRequest $request)
+    {
+        try {
+            $validatedData = $request->validated();
+            $file = $request->hasFile('file') ? $request->file('file') : null;
+            unset($validatedData['file']);
+            $user = $this->userService->createUser($validatedData, $file);
 
-        return $resp;
-
+            return $this->successResponse(
+                $user,
+                'Usuario creado exitosamente',
+                201
+            );
+        } catch (\Exception $e) {
+            return $this->serverErrorResponse(
+                'Error al crear el usuario',
+                $e
+            );
+        }
     }
 }

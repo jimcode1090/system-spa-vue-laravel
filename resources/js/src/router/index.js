@@ -3,6 +3,7 @@ import DashboardView from '../views/DashboardView.vue'
 
 const router = createRouter({
     history: createWebHistory('/'),
+    linkActiveClass: 'active',
     routes: [
         {
             path: '/',
@@ -46,9 +47,21 @@ const router = createRouter({
         },
         {
             path: '/users',
-            name: 'users',
-            component: () => import('../views/users/UserListView.vue')
+            component: () => import('../views/users/UserLayout.vue'),
+            children: [
+                {
+                    path: '',
+                    name: 'users',
+                    component: () => import('../views/users/ListUserView.vue'),
+                },
+                {
+                    path: 'create',
+                    name: 'users-create',
+                    component: () => import('../views/users/CreateUserView.vue'),
+                },
+            ]
         },
+
 
 
     ]

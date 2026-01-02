@@ -1,66 +1,37 @@
 <script setup>
-import {computed, onMounted, reactive, ref} from "vue"
-import {userService} from "../../services/userService"
-import {useAsync} from "../../composables/utilities/useAsync"
-import {usePagination} from "../../composables/utilities/usePagination"
-import FormFilter from "../../components/users/FormFilter.vue"
-import {USER_STATES} from "@/src/constants/data-static.js"
+import { useListUserViewModel } from "@/src/viewmodels/useListUserViewModel.js"
 
-const listStatus = USER_STATES
-const formFilterData = reactive({
-    name: "",
-    username: "",
-    email: "",
-    state: "",
-})
-
-const {execute} = useAsync();
-
-const listUsers = ref([])
-
-// Configurar paginación
 const {
-    paginatedItems: listUsersPaginated,
+    name,
+    nameAttrs,
+    username,
+    usernameAttrs,
+    email,
+    emailAttrs,
+    state,
+    stateAttrs,
+    errors,
+
+    listUsers,
+    listStatusUser,
+    paginatedItems,
     currentPage,
     itemsPerPage,
     totalPages,
-    pageNumbers,
     hasPreviousPage,
     hasNextPage,
-    goToNextPage,
+    pageNumbers,
     goToPreviousPage,
-    goToPage,
+    goToNextPage,
     isPageActive,
-    resetPagination
-} = usePagination(listUsers, 5)
+    goToPage,
 
-const clearSearch = () => {
-    formFilterData.name = ""
-    formFilterData.username = ""
-    formFilterData.email = ""
-    formFilterData.state = ""
-    resetPagination()
-}
+    isSubmitting,
+    onSubmit,
+    clearForm
 
-onMounted(async () => {
-    await fetchListUsers()
-})
-const fetchListUsers = async () => {
-    try {
-        listUsers.value = await execute(() => {
-            return userService.getListUsers(formFilterData);
-        })
-        resetPagination()
-        console.log(listUsers.value)
-    } catch (err) {
-        console.error(err)
-    }
-}
+} = useListUserViewModel()
 
-const clearListUsers = () => {
-    listUsers.value = []
-    resetPagination()
-}
 
 </script>
 
@@ -77,7 +48,7 @@ const clearListUsers = () => {
             <div class="card">
                 <div class="card-header">
                     <div class="card-tools">
-                        <RouterLink to="#" class="btn btn-info btn-sm">
+                        <RouterLink :to="{ name: 'users-create' }" class="btn btn-info btn-sm">
                             <i class="fas fa-plus-square"></i> Nuevo Usuario
                         </RouterLink>
                     </div>
@@ -91,21 +62,119 @@ const clearListUsers = () => {
                                 </h3>
                             </div>
                             <div class="card-body">
-                                <FormFilter :formFilterData="formFilterData" :listStatus="listStatus"/>
+                                <form role="form">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group row">
+                                                <label for="name" class="col-md-3 col-form-label">
+                                                    Nombre
+                                                </label>
+                                                <div class="col-md-9">
+                                                    <input
+                                                        id="name"
+                                                        type="text"
+                                                        class="form-control"
+                                                        :class="{ 'is-invalid' : errors.name}"
+                                                        v-model="name"
+                                                        v-bind="nameAttrs"
+                                                        placeholder="Ingrese el nombre"
+                                                    />
+                                                </div>
+                                                <span v-if="errors.name" class="invalid-feedback">
+                                                        {{ errors.name }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group row">
+                                                <label for="username" class="col-md-3 col-form-label">
+                                                    Usuario
+                                                </label>
+                                                <div class="col-md-9">
+                                                    <input
+                                                        id="username"
+                                                        type="text"
+                                                        class="form-control"
+                                                        :class="{ 'is-invalid' : errors.username}"
+                                                        v-model="username"
+                                                        v-bind="usernameAttrs"
+                                                        placeholder="Ingrese el nombre de usuario"
+                                                    />
+                                                </div>
+                                                <span v-if="errors.username" class="invalid-feedback">
+                                                        {{ errors.username }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group row">
+                                                <label for="email" class="col-md-3 col-form-label">
+                                                    Correo Electrónico
+                                                </label>
+                                                <div class="col-md-9">
+                                                    <input
+                                                        id="email"
+                                                        type="text"
+                                                        class="form-control"
+                                                        :class="{ 'is-invalid' : errors.email}"
+                                                        v-model="email"
+                                                        v-bind="emailAttrs"
+                                                    />
+                                                </div>
+                                                <span v-if="errors.email" class="invalid-feedback">
+                                                        {{ errors.email }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group row">
+                                                <label for="state" class="col-md-3 col-form-label">
+                                                    Estado
+                                                </label>
+                                                <div class="col-md-9">
+                                                    <el-select
+                                                        :class="{ 'is-invalid' : errors.state}"
+                                                        v-model="state"
+                                                        v-bind="stateAttrs"
+                                                        placeholder="Seleccione un estado"
+                                                        clearable
+                                                        class="w-100 h-25"
+                                                    >
+                                                        <el-option
+                                                            v-for="item in listStatusUser"
+                                                            :key="item.value"
+                                                            :label="item.label"
+                                                            :value="item.value"
+                                                        />
+                                                    </el-select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
                             </div>
                             <div class="card-footer">
                                 <div class="row">
                                     <div class="col-md-4 offset-4">
                                         <button
                                             class="btn btn-flat btn-info btn-width"
-                                            @click.prevent="fetchListUsers"
+                                            :disabled="isSubmitting"
+                                            @click.prevent="onSubmit"
+                                            v-loading.fullscreen.lock="isSubmitting"
                                         >
-                                            Buscar
+                                            <span v-if="isSubmitting">
+                                                <i class="fas fa-spinner fa-spin"></i> Buscando...
+                                            </span>
+                                            <span v-else>
+                                                <i class="fas fa-search"></i> Buscar
+                                            </span>
                                         </button>
                                         <button
                                             class="btn btn-flat btn-default btn-width"
-                                            @click.prevent="clearSearch"
+                                            @click.prevent="clearForm"
+                                            :disabled="isSubmitting"
                                         >
+                                            <i class="fas fa-eraser"></i>
                                             Limpiar
                                         </button>
                                     </div>
@@ -119,7 +188,7 @@ const clearListUsers = () => {
                                 </h3>
                             </div>
                             <div class="card-body table-responsive">
-                                <template v-if="listUsersPaginated.length ">
+                                <template v-if="paginatedItems.length ">
                                     <table
                                         class="table table-hover table-head-fixed text-nowrap projects"
                                     >
@@ -134,7 +203,7 @@ const clearListUsers = () => {
                                         </tr>
                                         </thead>
                                         <tbody>
-                                        <tr v-for="(user, index) in listUsersPaginated" :key="user.id">
+                                        <tr v-for="(user, index) in paginatedItems" :key="user.id">
                                             <td>
                                                 <li class="user-block">
                                                     <img src="/img/avatar.png" :alt="user.username" class="profile-avatar-img img-fluid img-circle"/>

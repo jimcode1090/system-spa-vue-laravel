@@ -10,10 +10,15 @@ const props = defineProps({
         type: String,
         required: true,
     },
+    appName: {
+        type: String,
+        required: true
+    }
 });
 
 // Provide baseUrl para todos los componentes hijos
 provide("baseUrl", props.baseUrl);
+provide("appName", props.appName);
 </script>
 
 <template>

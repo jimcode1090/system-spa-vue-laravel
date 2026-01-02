@@ -5,9 +5,12 @@ export const API_CONFIG  = {
         USER: {
             LIST: '/admin/users/get-list-users',
             BY_ID: '',
-            CREATE: '',
+            CREATE: '/admin/users/create-users',
             UPDATE: '',
             DELETE: ''
+        },
+        FILE: {
+            CREATE: '/admin/file/upload-files'
         }
     }
 }

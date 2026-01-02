@@ -68,6 +68,7 @@
                             v-model="formFilterData.state"
                             placeholder="Seleccione un estado"
                             clearable
+                            class="w-100 h-25"
                         >
                             <el-option
                                 v-for="item in listStatus"
