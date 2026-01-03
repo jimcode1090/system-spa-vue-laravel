@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/admin/users/get-list-users', [UserController::class, 'getListUsers']);
 Route::post('/admin/users/create-users', [UserController::class, 'createUser']);
+Route::post('/admin/users/edit-users', [UserController::class, 'updateUser']);
 
 Route::get('/{optional?}', function () {
     return view('app');

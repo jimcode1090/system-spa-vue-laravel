@@ -205,9 +205,17 @@ const {
                                         <tbody>
                                         <tr v-for="(user, index) in paginatedItems" :key="user.id">
                                             <td>
-                                                <li class="user-block">
-                                                    <img src="/img/avatar.png" :alt="user.username" class="profile-avatar-img img-fluid img-circle"/>
-                                                </li>
+                                                <template v-if="!user.profile_image">
+                                                    <li class="user-block">
+                                                        <img src="/img/avatar.png" :alt="user.username" class="profile-avatar-img img-fluid img-circle"/>
+                                                    </li>
+                                                </template>
+                                                <template v-else>
+                                                    <li class="user-block">
+                                                        <img :src="user.profile_image" :alt="user.username" class="profile-avatar-img img-fluid img-circle"/>
+                                                    </li>
+                                                </template>
+
                                             </td>
                                             <td>{{ user.fullname }}</td>
                                             <td>{{ user.email }}</td>
@@ -222,43 +230,47 @@ const {
                                             <td>
                                                 <RouterLink
                                                     to="#"
-                                                    class="btn btn-primary btn-sm"
+                                                    class="btn btn-flat btn-primary btn-sm"
                                                     title="Ver"
                                                 >
                                                     <i
                                                         class="fas fa-eye"
                                                     ></i>
                                                 </RouterLink>
-                                                <RouterLink
-                                                    to="#"
-                                                    class="btn btn-info btn-sm"
-                                                    title="Editar"
-                                                >
-                                                    <i
-                                                        class="fas fa-pencil-alt"
-                                                    ></i>
-                                                </RouterLink>
-                                                <RouterLink
-                                                    to="#"
-                                                    class="btn btn-success btn-sm"
-                                                    title="Permisos"
-                                                >
-                                                    <i class="fas fa-key"></i>
-                                                </RouterLink>
-                                                <RouterLink
-                                                    to="#"
-                                                    class="btn btn-danger btn-sm"
-                                                    title="Desactivar"
-                                                >
-                                                    <i class="fas fa-trash"></i>
-                                                </RouterLink>
-                                                <RouterLink
-                                                    to="#"
-                                                    class="btn btn-success btn-sm"
-                                                    title="Activar"
-                                                >
-                                                    <i class="fas fa-check"></i>
-                                                </RouterLink>
+                                                <template v-if="user.state === 'A'">
+                                                    <RouterLink
+                                                        :to="{ name: 'users-edit', params: { id: user.id } }"
+                                                        class="btn btn-flat btn-info btn-sm"
+                                                        title="Editar"
+                                                    >
+                                                        <i
+                                                            class="fas fa-pencil-alt"
+                                                        ></i>
+                                                    </RouterLink>
+                                                    <RouterLink
+                                                        to="#"
+                                                        class="btn btn-flat btn-success btn-sm"
+                                                        title="Permisos"
+                                                    >
+                                                        <i class="fas fa-key"></i>
+                                                    </RouterLink>
+                                                    <RouterLink
+                                                        to="#"
+                                                        class="btn btn-flat btn-danger btn-sm"
+                                                        title="Desactivar"
+                                                    >
+                                                        <i class="fas fa-trash"></i>
+                                                    </RouterLink>
+                                                </template>
+                                                <template v-else>
+                                                    <RouterLink
+                                                        to="#"
+                                                        class="btn btn-flat btn-success btn-sm"
+                                                        title="Activar"
+                                                    >
+                                                        <i class="fas fa-check"></i>
+                                                    </RouterLink>
+                                                </template>
                                             </td>
                                         </tr>
                                         </tbody>

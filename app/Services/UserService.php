@@ -102,14 +102,105 @@ class UserService
     /**
      * Update user information
      *
+     * Características:
+     * - Password es opcional (solo se actualiza si se proporciona)
+     * - File es opcional (solo se actualiza si se proporciona)
+     * - Si se sube un nuevo archivo, el antiguo se mantiene hasta que la transacción sea exitosa
+     * - Usa transacciones para garantizar atomicidad
+     *
      * @param int $id
      * @param array $data
-     * @return bool
+     * @param UploadedFile|null $file
+     * @return object
+     * @throws \Throwable
      */
-    public function updateUser(int $id, array $data): bool
+    public function updateUser(int $id, array $data, ?UploadedFile $file = null): object
     {
-        // Add business logic here
-        return $this->userRepository->update($id, $data);
+        $newFileId = null;
+        $oldFileId = null;
+
+        // Obtener el usuario actual para saber si tiene un archivo previo
+        $currentUser = $this->userRepository->findById($id);
+        if (!$currentUser) {
+            throw new \RuntimeException('Usuario no encontrado');
+        }
+
+        $oldFileId = $currentUser->profile_image ?? null;
+
+        DB::beginTransaction();
+
+        try {
+            // 1. Si se proporcionó un nuevo archivo, subirlo
+            if ($file) {
+                $newFileId = $this->fileService->storeFile($file, 'uploads/users');
+                if (!$newFileId || $newFileId <= 0) {
+                    throw new \RuntimeException('El archivo no se pudo guardar correctamente');
+                }
+                $data['file_id'] = $newFileId;
+            }
+
+            // 2. Si se proporcionó password, hashearla. Si no, no actualizar password
+            if (isset($data['password']) && !empty($data['password'])) {
+                $data['password'] = Hash::make($data['password']);
+            } else {
+                // No actualizar password si no se proporcionó
+                unset($data['password']);
+            }
+
+            // 3. Actualizar usuario
+            $updated = $this->userRepository->update($id, $data);
+
+            if (!$updated) {
+                throw new \RuntimeException('No se pudo actualizar el usuario');
+            }
+
+            // 4. Si todo salió bien, eliminar el archivo antiguo si había uno nuevo
+            if ($newFileId && $oldFileId && $oldFileId > 0) {
+                try {
+                    $this->fileService->deleteFile($oldFileId);
+                    Log::info('Old file deleted after successful update', [
+                        'old_file_id' => $oldFileId,
+                        'new_file_id' => $newFileId
+                    ]);
+                } catch (\Exception $deleteError) {
+                    // No hacer rollback si solo falla la eliminación del archivo antiguo
+                    Log::warning('Could not delete old file, but update was successful', [
+                        'old_file_id' => $oldFileId,
+                        'error' => $deleteError->getMessage()
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            // Retornar usuario actualizado
+            return $this->userRepository->findById($id);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            Log::error('Error updating user', [
+                'user_id' => $id,
+                'error' => $e->getMessage(),
+                'new_file_id' => $newFileId
+            ]);
+
+            // Si se subió un archivo nuevo durante esta transacción, eliminarlo
+            if ($newFileId && $newFileId > 0) {
+                try {
+                    $this->fileService->deleteFile($newFileId);
+                    Log::info('Rolled back: New file deleted', ['file_id' => $newFileId]);
+                } catch (\Exception $deleteError) {
+                    Log::error('Error deleting new file during rollback', [
+                        'file_id' => $newFileId,
+                        'error' => $deleteError->getMessage()
+                    ]);
+                }
+            }
+
+            // Re-throw the exception
+            throw $e;
+        }
     }
 
     /**

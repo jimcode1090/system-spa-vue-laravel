@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\User\CreateUserRequest;
+use App\Http\Requests\Admin\User\UpdateUserRequest;
 use App\Http\Requests\Admin\User\ListUsersRequest;
 use App\Services\UserService;
 use App\Traits\ApiResponser;
@@ -55,6 +56,30 @@ class UserController extends Controller
         } catch (\Exception $e) {
             return $this->serverErrorResponse(
                 'Error al crear el usuario',
+                $e
+            );
+        }
+    }
+
+    public function updateUser(UpdateUserRequest $request)
+    {
+        try {
+            $validatedData = $request->validated();
+            $userId = $validatedData['id'];
+            $file = $request->hasFile('file') ? $request->file('file') : null;
+
+            unset($validatedData['file']);
+            unset($validatedData['id']);
+            $user = $this->userService->updateUser($userId, $validatedData, $file);
+
+            return $this->successResponse(
+                $user,
+                'Usuario actualizado exitosamente',
+                200
+            );
+        } catch (\Exception $e) {
+            return $this->serverErrorResponse(
+                'Error al actualizar el usuario',
                 $e
             );
         }

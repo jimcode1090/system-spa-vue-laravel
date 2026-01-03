@@ -10,6 +10,7 @@ export class User {
         email,
         state,
         state_alias,
+        profile_image
     )
     {
         this.id = id
@@ -21,6 +22,7 @@ export class User {
         this.email = email
         this.state = state
         this.state_alias = state_alias
+        this.profile_image = profile_image
     }
 
     static fromApi(apiData)
@@ -38,6 +40,7 @@ export class User {
             apiData.email,
             apiData.state,
             apiData.state_alias,
+            apiData.profile_image
         )
     }
 }

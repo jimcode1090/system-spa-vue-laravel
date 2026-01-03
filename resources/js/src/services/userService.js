@@ -5,11 +5,13 @@ import {User} from "../models/User";
 class UserService {
     async getListUsers(filters = {}) {
         const params = {}
+        if (filters.id) params.id = filters.id
         if (filters.name) params.name = filters.name
         if (filters.username) params.username = filters.username
         if (filters.email) params.email = filters.email
         if (filters.state) params.state = filters.state
 
+        console.log("params a enviar:", params)
         const { data } = await apiClient.get(API_CONFIG.ENDPOINT.USER.LIST, {
             params
         })
@@ -41,6 +43,23 @@ class UserService {
         throw new Error(data.message || 'Error al crear usuario')
     }
 
+
+    async editUser(formData){
+        const {data} = await apiClient.post(API_CONFIG.ENDPOINT.USER.UPDATE, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        })
+
+        // Handle standardized API response format
+        // Response structure: { success, message, data }
+        if (data.success && data.data) {
+            return data.data
+        }
+
+        // If not successful, throw error (will be caught by ViewModel)
+        throw new Error(data.message || 'Error al editar usuario')
+    }
 }
 
 export const userService = new UserService();

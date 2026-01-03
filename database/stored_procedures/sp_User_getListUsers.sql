@@ -1,4 +1,4 @@
-CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_User_getListUsers`(
+CREATE PROCEDURE `sp_User_getListUsers`(
 	IN `in_name` VARCHAR(50),
 	IN `in_username` VARCHAR(50),
 	IN `in_email` VARCHAR(50),

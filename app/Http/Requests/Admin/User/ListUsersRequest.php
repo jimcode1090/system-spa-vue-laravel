@@ -22,6 +22,7 @@ class ListUsersRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'id' => ['nullable', 'exists:users,id'],
             'name' => ['nullable', 'string', 'min:2', 'max:50'],
             'username' => ['nullable', 'string', 'min:4', 'max:20'],
             'email' => ['nullable', 'email', 'max:100'],

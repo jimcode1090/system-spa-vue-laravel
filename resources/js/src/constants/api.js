@@ -6,7 +6,7 @@ export const API_CONFIG  = {
             LIST: '/admin/users/get-list-users',
             BY_ID: '',
             CREATE: '/admin/users/create-users',
-            UPDATE: '',
+            UPDATE: '/admin/users/edit-users',
             DELETE: ''
         },
         FILE: {

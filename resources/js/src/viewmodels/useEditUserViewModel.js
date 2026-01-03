@@ -1,17 +1,28 @@
 import {ref, computed, onMounted} from 'vue'
 import {useForm} from 'vee-validate'
-import {useRouter} from 'vue-router'
-import {useUserValidationSchema} from '../composables/users/useUserValidationSchema.js'
+import {useRoute, useRouter} from 'vue-router'
+import {useEditUserValidationSchema} from '../composables/users/useEditUserValidationSchema.js'
 import {userService} from "@/src/services/userService.js";
 import {useAsync} from "@/src/composables/utilities/useAsync.js";
 import {useBackendValidation} from "@/src/composables/utilities/useBackendValidation.js";
 import {useNotification} from "@/src/composables/utilities/useNotification.js";
 
-export function useCreateUserViewModel() {
+/**
+ * ViewModel para editar usuario
+ *
+ * Responsabilidades:
+ * - Obtener ID del usuario desde route params
+ * - Cargar datos existentes del usuario
+ * - Validar formulario de edición (password opcional)
+ * - Manejar subida de archivo opcional
+ * - Actualizar usuario
+ */
+export function useEditUserViewModel() {
 
     const router = useRouter()
-    const {schema} = useUserValidationSchema()
-    const {execute, loading: isSubmitting, error: asyncError} = useAsync()
+    const route = useRoute()
+    const {schema} = useEditUserValidationSchema() // Schema específico para edición
+    const {execute, loading: isSubmitting} = useAsync()
     const {handleError, mapBackendErrors} = useBackendValidation()
     const {error: notifyError, success: notifySuccess} = useNotification()
 
@@ -29,6 +40,14 @@ export function useCreateUserViewModel() {
         }
     })
 
+
+
+    // ID del usuario (se obtiene de route.params, NO del formulario)
+    const userId = ref(route.params.id)
+
+    // Imagen actual del usuario (cargada desde el servidor)
+    const currentImageUrl = ref(null)
+
     // Define reactive fields with validation
     const [firstname, firstnameAttrs] = defineField('firstname')
     const [secondname, secondnameAttrs] = defineField('secondname')
@@ -38,7 +57,7 @@ export function useCreateUserViewModel() {
     const [password, passwordAttrs] = defineField('password')
     const [file, fileAttrs] = defineField('file')
 
-    // Image preview URL
+    // Image preview URL (para nueva imagen seleccionada)
     const imagePreviewUrl = ref(null)
 
     /**
@@ -93,42 +112,47 @@ export function useCreateUserViewModel() {
     }
 
     /**
-     * Submit form - creates new user
+     * Submit form - actualiza el usuario
      */
     const onSubmit = handleSubmit(async (values) => {
         try {
             const formData = new FormData()
+
+            // ID del usuario (viene de route.params)
+            formData.append('id', userId.value)
+
+            // Datos básicos (siempre se envían)
             formData.append('firstname', values.firstname)
             formData.append('secondname', values.secondname || '')
             formData.append('lastname', values.lastname)
             formData.append('username', values.username)
             formData.append('email', values.email)
-            formData.append('password', values.password)
 
+            // Password - SOLO si se proporcionó (opcional en edición)
+            if (values.password && values.password.trim() !== '') {
+                formData.append('password', values.password)
+            }
+
+            // Archivo - SOLO si se seleccionó uno nuevo
             if (values.file) {
                 formData.append('file', values.file)
             }
 
-            await execute(() => {
-                return userService.createUser(formData)
-            })
+            await execute(() => userService.editUser(formData))
 
-            notifySuccess('Usuario registrado exitosamente')
+            notifySuccess('Usuario actualizado exitosamente')
             await router.push({name: 'users'})
 
         } catch (error) {
-            console.error('Error al crear usuario:', error)
-
-            // Handle all types of errors
+            // Manejo de todos los tipos de errores
             const errorResponse = handleError(error)
-            console.log('Error details:', errorResponse)
 
-            // If validation error (422), map to form fields
+            // Si es error de validación (422), mapear a campos del formulario
             if (errorResponse.isValidationError && errorResponse.validationErrors) {
                 setErrors(mapBackendErrors(errorResponse.validationErrors))
                 notifyError('Por favor corrija los errores de validación')
             } else {
-                // For other errors, show notification
+                // Para otros errores, mostrar notificación
                 notifyError(errorResponse.message)
             }
         }
@@ -148,6 +172,54 @@ export function useCreateUserViewModel() {
     const goBack = () => {
         router.push({name: 'users'})
     }
+
+    /**
+     * Cargar datos del usuario a editar
+     */
+    const getUserById = async () => {
+        try {
+            if (!userId.value) {
+                notifyError('ID de usuario no válido')
+                router.push({name: 'users'})
+                return
+            }
+
+            const users = await execute(() => userService.getListUsers({ id: userId.value }))
+
+            if (!users || users.length === 0) {
+                notifyError('Usuario no encontrado')
+                router.push({name: 'users'})
+                return
+            }
+
+            const user = users[0]
+
+            // Llenar formulario con datos existentes
+            firstname.value = user.firstname || ''
+            secondname.value = user.secondname || ''
+            lastname.value = user.lastname || ''
+            username.value = user.username || ''
+            email.value = user.email || ''
+            // password se deja vacío - solo se llena si se quiere cambiar
+
+            // Si el usuario tiene imagen, guardar URL actual
+            if (user.file_path) {
+                currentImageUrl.value = user.file_path
+            }
+
+        } catch (err) {
+            const errorResponse = handleError(err)
+            notifyError(errorResponse.message)
+            router.push({name: 'users'})
+        }
+    }
+
+    /**
+     * Inicialización al montar el componente
+     */
+    onMounted(async () => {
+        await getUserById()
+    })
 
     return {
         // Form fields
@@ -171,9 +243,11 @@ export function useCreateUserViewModel() {
 
         // State
         isSubmitting,
+        userId,
 
         // File handling
         imagePreviewUrl,
+        currentImageUrl, // Imagen actual del usuario
         hasFile,
         fileName,
 

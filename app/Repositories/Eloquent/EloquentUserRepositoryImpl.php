@@ -15,6 +15,7 @@ class EloquentUserRepositoryImpl implements UserRepositoryInterface
      */
     public function getListUsers(array $filters = []): array
     {
+        $id = $filters['id'] ?? 0;
         $name = $filters['name'] ?? '';
         $username = $filters['username'] ?? '';
         $email = $filters['email'] ?? '';
@@ -22,7 +23,8 @@ class EloquentUserRepositoryImpl implements UserRepositoryInterface
 
         //DB::statement("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
 
-        $results = DB::select('call sp_User_getListUsers (?, ?, ?, ?)', [
+        $results = DB::select('call sp_User_getListUsers (?, ?, ?, ?, ?)', [
+            $id,
             $name,
             $username,
             $email,
@@ -40,16 +42,11 @@ class EloquentUserRepositoryImpl implements UserRepositoryInterface
      */
     public function findById(int $id): ?object
     {
-        // TODO: Implement using stored procedure or Eloquent
-        return null;
-    }
+        $results = DB::select('CALL sp_User_getUserById(?)', [$id]);
 
-    /**
-     * Create a new user
-     *
-     * @param array $data
-     * @return object
-     */
+        // Stored procedure retorna array, tomamos el primer elemento
+        return $results[0] ?? null;
+    }
     public function create(array $data): object
     {
         $firstname = $data['firstname'] ?? '';
@@ -75,39 +72,40 @@ class EloquentUserRepositoryImpl implements UserRepositoryInterface
 
         return $result[0] ?? (object)$data;
     }
-
-    /**
-     * Update user
-     *
-     * @param int $id
-     * @param array $data
-     * @return bool
-     */
     public function update(int $id, array $data): bool
     {
-        // TODO: Implement using stored procedure or Eloquent
-        return true;
+        $firstname = $data['firstname'] ?? '';
+        $secondname = $data['secondname'] ?? '';
+        $lastname = $data['lastname'] ?? '';
+        $username = $data['username'] ?? '';
+        $email = $data['email'] ?? '';
+        $password = $data['password'] ?? null; // NULL si no se proporciona
+        $fileId = $data['file_id'] ?? null;
+
+        DB::statement("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
+
+        // Call stored procedure to update user
+        $result = DB::select('CALL sp_User_setUpdateUser (?, ?, ?, ?, ?, ?, ?, ?)', [
+            $id,
+            $firstname,
+            $secondname,
+            $lastname,
+            $username,
+            $email,
+            $password,
+            $fileId
+        ]);
+
+        // Si el stored procedure retorna algo, significa que se actualizó
+        return !empty($result);
     }
 
-    /**
-     * Delete user (soft delete)
-     *
-     * @param int $id
-     * @return bool
-     */
     public function delete(int $id): bool
     {
         // TODO: Implement using stored procedure or Eloquent
         return true;
     }
 
-    /**
-     * Change user state (activate/deactivate)
-     *
-     * @param int $id
-     * @param string $state
-     * @return bool
-     */
     public function changeState(int $id, string $state): bool
     {
         // TODO: Implement using stored procedure or Eloquent
